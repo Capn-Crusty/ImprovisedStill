@@ -84,8 +84,5 @@ On first start the server creates `<server profile>/ImprovisedStill/config.json`
 ## Releases
 Steam Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=3813055823
 
-## Building
-`tools\build.ps1` builds and signs both PBOs with DayZ Tools into `build\out` (set `IS_SIGN_KEY` to your own private key).
-
 ## License
 See [LICENSE](LICENSE). Requires DayZ; not affiliated with or endorsed by Bohemia Interactive.
