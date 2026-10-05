@@ -1,0 +1,39 @@
+[h2]Improvised Still 1.0[/h2]
+Gameplay is complete. A dedicated still model will follow as a visual update.
+
+[h3]Moonshine[/h3]
+[list]
+[*]The still's spirit is now called Moonshine (server owners can rename it, e.g. back to Vodka).
+[*]Dried and cooked fruit work like fresh. Rotten fruit gives half the moonshine and makes the batch more likely to go bad. Burnt or ruined fruit does not ferment, and partly eaten fruit gives its share.
+[*]Berries and pumpkin count as fruit; tomatoes, peppers and zucchini give a quarter; cannabis does not ferment.
+[*]Fermentation follows temperature: full speed from 20 °C, slower in the cold, stopped near freezing and in hot mash until it cools. On cold maps, keep the still beside a fire.
+[*]Ready mash spoils if left unheated for 2 hours: the fruit rots and it only distills to water.
+[*]Fruit added to ready mash needs half the usual time to ferment.
+[/list]
+
+[h3]Distilling[/h3]
+[list]
+[*]Nothing comes over until the liquid is hot enough: moonshine from 78 °C, clean water at 100 °C.
+[*]A working still no longer loses liquid to steam.
+[*]Food in a still holding liquid no longer burns (dried or cooked fruit used to burn at once).
+[*]The pipe, thermometer, collection bottle and fruit warm up realistically.
+[*]A ruined still stops working.
+[/list]
+
+[h3]Water[/h3]
+[list]
+[*]Bottled clean water now looks like any other water; only the still's tooltip names it. Remember which bottles you filled.
+[*]Salt water and clean water can put out fires.
+[/list]
+
+[h3]Fixes[/h3]
+[list]
+[*]Tooltip showed "$UNT$Vodka" and temperatures over 100 °C.
+[*]A large item (such as a pumpkin) could be cut short by a server restart.
+[/list]
+
+[h3]For server owners[/h3]
+[list]
+[*]Much lighter on busy servers: stills only do work while heated or holding mash, and empty or idle stills cost nothing.
+[*]New settings in profiles/ImprovisedStill/config.json, added automatically with their defaults on the next start: SpiritName, SpiritPerCargoSlot, MashWaterPerSpiritMl, RottenFruitVodkaYield, RottenMashFoodPoisonChance, LowSugarVegetableVodkaYield, TopUpFermentationFraction, FermentMinTemperature, FermentFullSpeedTemperature, FermentMaxTemperature, MashSpoilMinutes, MashDistillTemperature.
+[/list]

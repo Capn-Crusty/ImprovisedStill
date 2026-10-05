@@ -72,7 +72,9 @@ class CfgLiquidDefinitions
     class CleanWater
     {
         type = 4194304;
-        displayName = "Clean Water";
+        // Shows as plain water: you cannot tell distilled water from any other
+        // (only the still's own tooltip names it, since you watched it come out).
+        displayName = "Water";
         flammability = -10;
         liquidFreezeThreshold = 0;
         liquidThawThreshold = 0;
@@ -101,22 +103,32 @@ class CfgVehicles
         inventorySlot[] += {"StillBottle"};
     };
 
+    // Vanilla gives pipes and thermometers no temperature; the still heats
+    // them, so they need one (no freezing, like glass bottles).
     class Pipe : Inventory_Base
     {
         inventorySlot[] += {"StillPipe"};
+        varTemperatureMin = -100;
+        varTemperatureMax = 200;
+        varTemperatureFreezePoint = -200;
+        varTemperatureThawPoint = -200;
     };
 
     // Optional: improves vodka yield (see ThermometerVodkaBonus).
     class Thermometer : Inventory_Base
     {
         inventorySlot[] += {"StillThermometer"};
+        varTemperatureMin = -100;
+        varTemperatureMax = 200;
+        varTemperatureFreezePoint = -200;
+        varTemperatureThawPoint = -200;
     };
 
     class ImprovisedStill : Pot
     {
         scope = 2;
         displayName = "Improvised Still";
-        descriptionShort = "An improvised distillation assembly. Requires a condenser pipe and collection bottle. An attached thermometer improves vodka yield.";
+        descriptionShort = "An improvised distillation assembly. Requires a condenser pipe and collection bottle. An attached thermometer improves the spirit yield.";
         // Pot inheritance keeps vanilla cookware slots/behavior.
         attachments[] += {"StillPipe", "StillBottle", "StillThermometer"};
     };
