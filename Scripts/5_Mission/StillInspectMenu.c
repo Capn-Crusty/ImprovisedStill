@@ -10,35 +10,40 @@ modded class InspectMenuNew
         if (!itemBase || itemBase.GetQuantity() <= 0 || !itemBase.IsLiquidContainer())
             return;
 
+        // Vanilla writes this line in capitals.
         ImprovisedStill still = ImprovisedStill.Cast(itemBase);
         if (still && still.GetFermentState() == ImprovisedStill.STILL_FERMENT_FERMENTING)
         {
-            string fermenting = "Mash (fermenting)";
+            string fermenting = "MASH (FERMENTING)";
             if (still.GetFermentPause() == ImprovisedStill.STILL_PAUSE_COLD)
-                fermenting = "Mash (too cold)";
+                fermenting = "MASH (TOO COLD)";
             else if (still.GetFermentPause() == ImprovisedStill.STILL_PAUSE_HOT)
-                fermenting = "Mash (too hot)";
+                fermenting = "MASH (TOO HOT)";
             WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", fermenting, Colors.COLOR_LIQUID);
             return;
         }
         if (still && still.GetFermentState() == ImprovisedStill.STILL_FERMENT_READY)
         {
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "Mash (ready)", Colors.COLOR_LIQUID);
+            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "MASH (READY)", Colors.COLOR_LIQUID);
             return;
         }
         if (still && still.GetFermentState() == ImprovisedStill.STILL_FERMENT_SPOILED)
         {
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "Mash (spoiled)", Colors.COLOR_LIQUID);
+            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "MASH (SPOILED)", Colors.COLOR_LIQUID);
             return;
         }
 
         int liquidType = itemBase.GetLiquidType();
         if (liquidType == LIQUID_SALTWATER)
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "Salt Water", Colors.COLOR_LIQUID);
+            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "SALT WATER", Colors.COLOR_LIQUID);
         else if (liquidType == LIQUID_CLEANWATER)
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", StillLiquidName(LIQUID_WATER), Colors.COLOR_LIQUID); // looks like any water
+            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "#inv_inspect_water", Colors.COLOR_LIQUID); // exactly vanilla's water
         else if (liquidType == LIQUID_VODKA)
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", StillSpiritName.Get(), Colors.COLOR_LIQUID);
+        {
+            string spirit = StillSpiritName.Get();
+            spirit.ToUpper();
+            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", spirit, Colors.COLOR_LIQUID);
+        }
     }
 
     // On a fireplace the inventory shows the still only as an icon, without

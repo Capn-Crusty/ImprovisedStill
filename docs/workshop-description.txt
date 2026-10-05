@@ -31,6 +31,6 @@ Blacking out is vanilla unconsciousness: if you disconnect or your game crashes 
 [h2]For server owners[/h2]
 Copy the key from the mod's keys folder to your server's keys folder, and add the mod's improvisedstill_types.xml to your mission: register it in a CE folder in cfgeconomycore.xml (e.g. customtypes), or copy its entry into db/types.xml. The still is crafted only; the entry sets how long an untouched still lasts (7 days by default). On first start the server creates profiles/ImprovisedStill/config.json, where you can tune fermentation time, saltwater sickness, drinking effects and more, or rename the moonshine (e.g. to vodka). Restart the server to apply changes.
 
-Version 1.0: gameplay is complete. A dedicated still model will follow as a visual update (the still uses the vanilla cooking pot look for now).
+Version 1.0.1: gameplay is complete. A dedicated still model will follow as a visual update (the still uses the vanilla cooking pot look for now).
 
 Source code: [url=https://github.com/Capn-Crusty/ImprovisedStill]github.com/Capn-Crusty/ImprovisedStill[/url]

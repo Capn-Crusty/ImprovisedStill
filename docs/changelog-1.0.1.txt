@@ -1,0 +1,5 @@
+[h2]Improvised Still 1.0.1[/h2]
+[list]
+[*]Fixed: the still could only be crafted from a pristine pot and pipe. Any pot and pipe short of ruined now work (the pot must be empty); the still keeps the pot's condition.
+[*]The item tooltip's liquid line now matches vanilla's capitals (WATER, SALT WATER, MOONSHINE, MASH (READY) and so on).
+[/list]

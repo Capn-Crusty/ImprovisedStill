@@ -13,6 +13,18 @@ class CraftImprovisedStill : RecipeBase
         InsertIngredient(0, "Pot");
         InsertIngredient(1, "Pipe");
 
+        // RecipeBase leaves these at 0, which means "pristine only" (damage)
+        // and "empty only" (quantity). Allow any condition short of ruined,
+        // like vanilla recipes; the pot must still be empty.
+        m_MinDamageIngredient[0] = -1;
+        m_MaxDamageIngredient[0] = 3;
+        m_MinQuantityIngredient[0] = -1;
+        m_MaxQuantityIngredient[0] = 0;
+        m_MinDamageIngredient[1] = -1;
+        m_MaxDamageIngredient[1] = 3;
+        m_MinQuantityIngredient[1] = -1;
+        m_MaxQuantityIngredient[1] = -1;
+
         AddResult("ImprovisedStill");
         m_ResultSetHealth[0] = -1;
         m_ResultInheritsColor[0] = -1;
