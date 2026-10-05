@@ -1,0 +1,33 @@
+[h1]Improvised Still[/h1]
+
+Craft a still from a cooking pot and a pipe, then turn any water into clean drinking water, or fruit and potatoes into vodka. Works with vanilla DayZ; no other mods required.
+
+[h2]How it works[/h2]
+[list]
+[*][b]Craft:[/b] combine a cooking pot with a pipe. The still goes into your hands with the pipe attached.
+[*][b]Collect:[/b] attach a glass bottle, plastic water bottle, water pouch or filtering bottle to the Collection Bottle slot (canteens do not fit).
+[*][b]Heat:[/b] put it on a lit fireplace, fire barrel or portable gas stove.
+[*][b]Clean water:[/b] fill it with any water (sea, pond, river, snow). Distilling removes all disease, so it beats boiling.
+[*][b]Vodka:[/b] fresh water plus fruit or potatoes, left unheated, ferments into mash (15 minutes by default), then distills into vodka. Salt water will not ferment.
+[*][b]Thermometer:[/b] attach one for 25% more vodka.
+[/list]
+
+[h2]Seawater is dangerous[/h2]
+Drinking seawater dehydrates you fast, makes you vomit, and causes saltwater sickness. Antibiotics will not help; a full saline IV cures it. Any water container can be filled from the sea, so you can haul seawater to your still.
+
+[h2]Vodka and mash[/h2]
+[list]
+[*]Vodka disinfects wounds, rags and clothing like alcohol tincture, and washes bloody hands.
+[*]Drinking gets you drunk: blur, stumbling, a warm feeling and pain relief, then vomiting and blackout if you overdo it. Food slows it down. It is saved with your character.
+[*]Ready mash drinks as beer, but a batch can go bad and give food poisoning.
+[*]The still also cooks food like a pot; boiled food does not burn while it holds liquid.
+[*]Distilled clean water works as car coolant.
+[/list]
+
+[h2]Warning[/h2]
+Blacking out is vanilla unconsciousness: if you disconnect or your game crashes while blacked out, you die. A clean server restart is safe.
+
+[h2]For server owners[/h2]
+Copy the key from the mod's keys folder to your server's keys folder, and add the mod's improvisedstill_types.xml to your mission: register it in a CE folder in cfgeconomycore.xml (e.g. customtypes), or copy its entry into db/types.xml. The still is crafted only; the entry sets how long an untouched still lasts (7 days by default). On first start the server creates profiles/ImprovisedStill/config.json, where you can tune fermentation time, saltwater sickness, drinking effects and more. Restart the server to apply changes.
+
+Version 0.99: all features are in; a dedicated still model is planned (the still uses the vanilla cooking pot look for now).
