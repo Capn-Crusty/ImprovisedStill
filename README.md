@@ -8,7 +8,7 @@ Craft a still from a cooking pot and a pipe, then distill any water into clean d
 
 ## How to use
 1. **Craft:** combine a cooking pot with a pipe, either way round (in hands, in inventory or on the ground). The still lands in your hands with the pipe in its Condenser Pipe slot. It keeps the pot's condition and the pipe's condition.
-2. **Bottle:** attach a glass bottle, plastic water bottle, water pouch or filtering bottle to the Collection Bottle slot (canteens do not fit). Optionally attach a **thermometer** to the Thermometer slot: while attached it adds 25% to the moonshine yield, and the still's tooltip shows its temperature.
+2. **Bottle:** attach a glass bottle, plastic water bottle, canteen, water pouch or filtering bottle to the Collection Bottle slot. Optionally attach a **thermometer** to the Thermometer slot: while attached it adds 25% to the moonshine yield, and the still's tooltip shows its temperature.
 3. **Heat:** put the still on a lit fireplace or fire barrel, or on a lit portable gas stove. It only runs while heated with both the pipe and the bottle attached.
 4. **Load:**
    - **Clean water:** fill the still with any water: sea, pond, river or snow. Any water container (bottles, canteens, pots, cauldrons, jerry cans, the still) can be filled straight from the sea.

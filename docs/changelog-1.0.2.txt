@@ -1,0 +1,5 @@
+[h2]Improvised Still 1.0.2[/h2]
+[list]
+[*]Canteens now fit the Collection Bottle slot (they still go on belts and in fireplace cooking slots).
+[*]Fixed: plastic water bottles refused the Collection Bottle slot on servers running mods that add their own bottle slots (such as the Windstrides Clothing Pack's canvas backpack).
+[/list]

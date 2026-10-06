@@ -5,7 +5,7 @@ Craft a still from a cooking pot and a pipe, then turn any water into clean drin
 [h2]How it works[/h2]
 [list]
 [*][b]Craft:[/b] combine a cooking pot with a pipe. The still goes into your hands with the pipe attached.
-[*][b]Collect:[/b] attach a glass bottle, plastic water bottle, water pouch or filtering bottle to the Collection Bottle slot (canteens do not fit).
+[*][b]Collect:[/b] attach a glass bottle, plastic water bottle, canteen, water pouch or filtering bottle to the Collection Bottle slot.
 [*][b]Heat:[/b] put it on a lit fireplace, fire barrel or portable gas stove.
 [*][b]Clean water:[/b] fill it with any water (sea, pond, river, snow). Distilling removes all disease, so it beats boiling. Once bottled it looks like any other water, so remember which bottles you filled.
 [*][b]Moonshine:[/b] fresh water plus fruit or potatoes, left unheated, ferments into mash (15 minutes by default), then distills into moonshine. Salt water will not ferment. Dried and cooked fruit work like fresh; rotten fruit gives half the moonshine and is more likely to go bad; burnt fruit will not ferment. Berries and pumpkin count as fruit; tomatoes, peppers and zucchini give a quarter of the moonshine. Fermenting slows in the cold and stops near freezing, and hot mash must cool first. Fruit added to ready mash needs half the time to ferment. Ready mash left unheated for 2 hours spoils.
@@ -31,6 +31,6 @@ Blacking out is vanilla unconsciousness: if you disconnect or your game crashes 
 [h2]For server owners[/h2]
 Copy the key from the mod's keys folder to your server's keys folder, and add the mod's improvisedstill_types.xml to your mission: register it in a CE folder in cfgeconomycore.xml (e.g. customtypes), or copy its entry into db/types.xml. The still is crafted only; the entry sets how long an untouched still lasts (7 days by default). On first start the server creates profiles/ImprovisedStill/config.json, where you can tune fermentation time, saltwater sickness, drinking effects and more, or rename the moonshine (e.g. to vodka). Restart the server to apply changes.
 
-Version 1.0.1: gameplay is complete. A dedicated still model will follow as a visual update (the still uses the vanilla cooking pot look for now).
+Version 1.0.2: gameplay is complete. A dedicated still model will follow as a visual update (the still uses the vanilla cooking pot look for now).
 
 Source code: [url=https://github.com/Capn-Crusty/ImprovisedStill]github.com/Capn-Crusty/ImprovisedStill[/url]

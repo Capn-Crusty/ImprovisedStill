@@ -103,6 +103,22 @@ class CfgVehicles
         inventorySlot[] += {"StillBottle"};
     };
 
+    // Mods that give the plastic bottle slots of its own (e.g. a backpack's
+    // bottle holder) hide Bottle_Base's list, so add the slot here too. Using
+    // += on both sides keeps both lists whichever mod loads first.
+    class WaterBottle : Bottle_Base
+    {
+        inventorySlot[] += {"StillBottle"};
+    };
+
+    // Vanilla gives canteens their own slot list (belt, direct cooking). += here
+    // dropped those (tested: canteens stopped fitting belts), so restate
+    // vanilla's list in full and add the collection slot.
+    class Canteen : Bottle_Base
+    {
+        inventorySlot[] = {"Belt_Left", "DirectCookingA", "DirectCookingB", "DirectCookingC", "StillBottle"};
+    };
+
     // Vanilla gives pipes and thermometers no temperature; the still heats
     // them, so they need one (no freezing, like glass bottles).
     class Pipe : Inventory_Base
