@@ -374,11 +374,17 @@ class ImprovisedStill extends Pot
                 m_AlcoholOutputTarget = GetFermentableOutputTarget(fermentable);
             }
         }
-        // Any water (salt, pond, river, snow...) distills to clean water.
+        // Any water (salt, pond, river, snow...) distills to vanilla water with
+        // no disease, so it mixes with any other water like vanilla's does.
         else if (GetQuantity() > 0 && (inputLiquidType & LIQUID_GROUP_WATER))
-            outputType = LIQUID_CLEANWATER;
+            outputType = LIQUID_WATER;
 
-        if (outputType == LIQUID_NONE || (bottle.GetQuantity() > 0 && bottle.GetLiquidType() != outputType))
+        // Clean Water from older versions is water too.
+        int bottleLiquid = bottle.GetLiquidType();
+        if (bottleLiquid == LIQUID_CLEANWATER)
+            bottleLiquid = LIQUID_WATER;
+
+        if (outputType == LIQUID_NONE || (bottle.GetQuantity() > 0 && bottleLiquid != outputType))
         {
             m_StillProgress = 0.0;
             if (!fermentable && outputType != LIQUID_VODKA)
@@ -441,6 +447,10 @@ class ImprovisedStill extends Pot
         if (bottle.CanHaveTemperature())
             bottle.SetTemperatureDirect((bottle.GetTemperature() * before + STILL_DISTILLATE_TEMPERATURE * added) / (before + added));
 
+        // Distillate carries no disease: an empty vessel starts clean, while
+        // water already in it keeps whatever it had (clean into dirty is dirty).
+        if (before <= 0)
+            bottle.RemoveAllAgents();
         bottle.SetLiquidType(outputType);
         bottle.SetQuantity(before + added);
         SetQuantity(GetQuantity() - batchQuantity * waterPerMl);

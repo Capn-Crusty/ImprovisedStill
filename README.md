@@ -17,8 +17,8 @@ Craft a still from a cooking pot and a pipe, then distill any water into clean d
 5. **Output:** every 30 seconds up to 50 ml moves into the bottle. The still's tooltip shows the collection bottle's contents and fill level (and a missing pipe or bottle), which helps when it sits on a fireplace where its slots are not shown. The still pauses if the bottle is full or already holds a different liquid. Plastic water bottles take a little damage with each batch.
 
 ## Liquids
-- **Salt Water** shows its name in the item tooltip (you would taste it at once). **Clean Water** shows as plain "Water": distilled water looks like any other, so only the still's tooltip (its collection bottle line) names it. Keep track of which bottles you filled.
-- **Clean Water** is safe drinking water, the same as vanilla Water. Distilling strips all disease, so it is more reliable than boiling. It also works as car radiator coolant (salt water and mash do not).
+- **Salt Water** shows its name in the item tooltip (you would taste it at once).
+- **Distilled water** is ordinary vanilla Water with no disease, so it is more reliable than boiling. It mixes with any other water, works as car radiator coolant and puts out fires (salt water and mash are not coolant). Poured into a vessel that already holds water, it keeps whatever that water carried: clean into dirty is dirty. Clean Water made by versions before 1.0.3 still works the same.
 - **Salt Water** dehydrates you (each ml costs about 1.5 ml of hydration), makes you vomit once about 500 ml is in your stomach, and causes **saltwater sickness** after about 300 ml: cholera-like vomiting and water loss, worse the more you drink. Antibiotics do not cure it; a completed saline IV (the whole bag, on yourself or another player) does. Real cholera is unchanged and still needs tetracycline.
 
 ## Mash

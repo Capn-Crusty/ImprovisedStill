@@ -1,0 +1,5 @@
+[h2]Improvised Still 1.0.3[/h2]
+[list]
+[*]The still now makes ordinary water with no disease, instead of a separate Clean Water liquid. It mixes with any other water and tops up vessels that already hold water (before, a vessel with found or purified water stopped the still). Water already in the vessel keeps whatever it carried, so collect into an empty or clean vessel.
+[*]Clean Water made by earlier versions still works as before.
+[/list]
