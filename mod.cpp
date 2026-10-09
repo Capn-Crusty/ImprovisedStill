@@ -7,4 +7,4 @@ tooltip = "Improvised Still";
 overview = "Craft a still from a cooking pot and a pipe. Distill any water into clean water, ferment fruit and potatoes into mash and moonshine, and beware of drinking seawater.";
 action = "";
 author = "Capn_Crusty";
-version = "1.0.3";
+version = "1.0.4";

@@ -83,6 +83,36 @@ modded class PlayerStomach
         super.ProcessNutrients(delta_time);
         s_StillDigestingPlayer = null;
     }
+
+    // Drop undigested vodka and beer so they cannot intoxicate again.
+    // The stomach volume is recounted on the next digestion pass.
+    void StillDropAlcohol()
+    {
+        for (int i = m_StomachContents.Count() - 1; i >= 0; i--)
+        {
+            string cls = m_StomachContents[i].GetClassName();
+            if (cls == "Vodka" || cls == "Beer")
+                m_StomachContents.Remove(i);
+        }
+    }
+}
+
+// Admin heals clear every agent: COT's heal calls this directly and vanilla's
+// ResetPlayer goes through it too. Treat that as sobering up, including the
+// alcohol still in the stomach, which would otherwise keep re-intoxicating
+// the player as it digests.
+modded class PlayerAgentPool
+{
+    override void RemoveAllAgents()
+    {
+        super.RemoveAllAgents();
+        if (m_Player)
+        {
+            if (m_Player.GetStomach())
+                m_Player.GetStomach().StillDropAlcohol();
+            m_Player.StillSetDrunkTier(STILL_DRUNK_SOBER);
+        }
+    }
 }
 
 modded class StomachItem

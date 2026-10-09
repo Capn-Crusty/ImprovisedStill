@@ -1,0 +1,4 @@
+[h2]Improvised Still 1.0.4[/h2]
+[list]
+[*]Fixed: healing a player with admin tools (such as COT's heal) cleared their drunk level, but moonshine or beer still in their stomach made them drunk again. A heal now fully sobers the player.
+[/list]
