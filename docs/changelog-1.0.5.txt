@@ -1,0 +1,4 @@
+[h2]Improvised Still 1.0.5[/h2]
+[list]
+[*]Salt water can no longer be used to water growing plants (vanilla already refused it for garden plots).
+[/list]
