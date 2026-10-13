@@ -1,0 +1,19 @@
+[h2]Improvised Still 1.1.0[/h2]
+Mash now becomes real beer, so it no longer turns back into water when poured out.
+
+[list]
+[*]When water and fruit finish fermenting in the still, the water becomes beer. Beer pours, carries, stores and drinks like any beer, and never spoils. Pour beer into a still and heat it to make moonshine.
+[*]Each inventory slot of fruit ferments 250 ml of water, so a full still needs 8 slots (8 apples or 4 pears). With too little, the tooltip shows "MASH (NEEDS MORE FRUIT)". Fruit is used only as far as the water needs; extra fruit is left over.
+[*]Fermenting kills most germs that were in the water. A batch can still go bad (more likely with rotten fruit), and those germs travel with the beer.
+[*]Distilling gives 1 ml of moonshine per 3 ml of beer: a full still nearly fills a glass bottle, and fills one with a thermometer attached.
+[*]A fireplace that has burned out keeps heating the still while its coals are hot.
+[*]Mash no longer spoils, and adding fruit to finished mash no longer restarts it.
+[*]Stills that were mid-batch when the server updates become beer straight away.
+[/list]
+
+[h3]For server owners[/h3]
+[list]
+[*]New settings in config.json, added automatically: WaterPerFruitSlot, FermentKillsGermsChance, BeerPerSpiritMl, FireplaceResidualHeatTemperature.
+[*]Removed automatically: SpiritPerCargoSlot, MashWaterPerSpiritMl, TopUpFermentationFraction, MashSpoilMinutes.
+[*]RottenFruitVodkaYield and LowSugarVegetableVodkaYield now set how much rotten and low-sugar fruit count toward WaterPerFruitSlot.
+[/list]

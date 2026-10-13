@@ -1,39 +1,38 @@
 class ImprovisedStill extends Pot
 {
     protected float m_StillProgress;
-    protected float m_AlcoholOutputProduced;
-    protected float m_AlcoholOutputTarget;
-    protected string m_ActiveFermentableType;
     protected float m_FermentSeconds;
     protected int m_FermentState; // STILL_FERMENT_*, synced for the tooltip
     static const int STILL_FERMENT_NONE = 0;
     static const int STILL_FERMENT_FERMENTING = 1;
-    static const int STILL_FERMENT_READY = 2;
-    static const int STILL_FERMENT_SPOILED = 3;
-    protected int m_FermentableCount = -1; // fruit/potatoes seen last tick; -1 until the first tick after load
     protected int m_FermentPause; // STILL_PAUSE_*, why fermentation is stalled, synced for the tooltip
     static const int STILL_PAUSE_NONE = 0;
     static const int STILL_PAUSE_COLD = 1;
     static const int STILL_PAUSE_HOT = 2;
-    protected const float STILL_INSTANT_FERMENT_SECONDS = 5.0; // marks a batch as started with instant fermentation
+    static const int STILL_PAUSE_FRUIT = 3; // not enough fruit for the water
+    // A batch saved by a version before 1.1.0, converted to beer on the first
+    // tick: STILL_LEGACY_FERMENTING has not had its bad-batch roll yet,
+    // STILL_LEGACY_READY has.
+    protected int m_LegacyBatch;
+    protected const int STILL_LEGACY_NONE = 0;
+    protected const int STILL_LEGACY_FERMENTING = 1;
+    protected const int STILL_LEGACY_READY = 2;
     protected const float STILL_BATCH_SECONDS = 30.0;
     protected const float STILL_BATCH_QUANTITY = 50.0;
     protected const float STILL_DISTILLATE_TEMPERATURE = 35.0;
     protected const float STILL_PIPE_TEMPERATURE = 60.0;            // with steam going through it
     protected const float STILL_PIPE_CONDUCTION_TEMPERATURE = 40.0; // from the hot pot alone
     protected const int STILL_TICK_FAST_MS = 5000;  // heated: distilling needs it
-    protected const int STILL_TICK_SLOW_MS = 30000; // fermenting or ready mash (minutes-long timers)
+    protected const int STILL_TICK_SLOW_MS = 30000; // fermenting (a minutes-long timer)
 
     void ImprovisedStill()
     {
         m_StillProgress = 0.0;
-        m_AlcoholOutputProduced = 0.0;
-        m_AlcoholOutputTarget = 0.0;
-        m_ActiveFermentableType = "";
         m_FermentSeconds = 0.0;
         m_FermentState = STILL_FERMENT_NONE;
-        RegisterNetSyncVariableInt("m_FermentState", 0, 3);
-        RegisterNetSyncVariableInt("m_FermentPause", 0, 2);
+        m_LegacyBatch = STILL_LEGACY_NONE;
+        RegisterNetSyncVariableInt("m_FermentState", 0, 1);
+        RegisterNetSyncVariableInt("m_FermentPause", 0, 3);
     }
 
     int GetFermentState()
@@ -68,33 +67,23 @@ class ImprovisedStill extends Pot
         return (temperature - s.FermentMinTemperature) / (s.FermentFullSpeedTemperature - s.FermentMinTemperature);
     }
 
-    // Fruit or potatoes in the cargo make the liquid a mash.
+    // Fresh water with fruit or potatoes in the cargo is a mash (fermenting).
+    // Once fermented it is beer, a liquid of its own.
     bool HasMash()
     {
-        return FindFermentableInput() != null;
+        return IsFreshWater() && FindFermentableInput() != null;
     }
 
-    // Set by PlayerBase.Consume while a player drinks from this still, so
-    // ready mash is digested as beer. Everything else sees the real liquid.
-    protected bool m_DrinkingMash;
-
-    void SetDrinkingMash(bool drinking)
+    protected bool IsFreshWater()
     {
-        m_DrinkingMash = drinking;
-    }
-
-    override int GetLiquidType()
-    {
-        if (m_DrinkingMash && m_FermentState == STILL_FERMENT_READY)
-            return LIQUID_BEER;
-
-        return super.GetLiquidType();
+        int liquid = GetLiquidType();
+        return GetQuantity() > 0 && (liquid & LIQUID_GROUP_WATER) && liquid != LIQUID_SALTWATER;
     }
 
     // To keep idle stills free on busy servers, a still only ticks when it has
-    // work: every 5 s while heated, every 30 s while it holds mash, and not at
-    // all when it is empty, ruined, spoiled or holds only water. Anything that
-    // could give it work wakes it: filling it, adding or removing fruit,
+    // work: every 5 s while heated, every 30 s while it is fermenting, and not
+    // at all when it is empty, ruined, or holds only water or beer. Anything
+    // that could give it work wakes it: filling it, adding or removing fruit,
     // moving it (onto a fire, a stove, into a barrel), or lighting the fire or
     // stove it sits on (see StillHeatHooks.c). Each tick picks the next pace.
     protected int m_TickMilliseconds; // 0 = asleep
@@ -184,16 +173,15 @@ class ImprovisedStill extends Pot
     // never negative; newer formats start with a negative version marker so
     // old saves can be told apart without a failed read (a failed read marks
     // the entity as corrupted).
-    protected const float STILL_SAVE_VERSION_2 = -2.0; // adds m_FermentSeconds
+    protected const float STILL_SAVE_VERSION_2 = -2.0; // 0.99-1.0.5: adds m_FermentSeconds
+    protected const float STILL_SAVE_VERSION_3 = -3.0; // 1.1.0: mash becomes beer; per-fruit tracking gone
+    protected const float STILL_OLD_SPOIL_SECONDS = 7200.0; // MashSpoilMinutes' default before 1.1.0
 
     override void OnStoreSave(ParamsWriteContext ctx)
     {
         super.OnStoreSave(ctx);
-        ctx.Write(STILL_SAVE_VERSION_2);
+        ctx.Write(STILL_SAVE_VERSION_3);
         ctx.Write(m_StillProgress);
-        ctx.Write(m_AlcoholOutputProduced);
-        ctx.Write(m_AlcoholOutputTarget);
-        ctx.Write(m_ActiveFermentableType);
         ctx.Write(m_FermentSeconds);
     }
 
@@ -206,32 +194,57 @@ class ImprovisedStill extends Pot
         if (!ctx.Read(first))
             return false;
 
-        bool hasFermentation = first < 0.0;
-        if (hasFermentation)
+        m_FermentSeconds = 0.0;
+        if (first == STILL_SAVE_VERSION_3)
         {
-            if (!ctx.Read(m_StillProgress))
+            if (!ctx.Read(m_StillProgress) || !ctx.Read(m_FermentSeconds))
                 return false;
         }
         else
         {
-            m_StillProgress = first; // original format
+            // Older formats also hold per-fruit alcohol tracking, which 1.1.0
+            // no longer uses.
+            float produced;
+            float target;
+            string activeType;
+            if (first < 0.0)
+            {
+                if (!ctx.Read(m_StillProgress))
+                    return false;
+            }
+            else
+            {
+                m_StillProgress = first; // original format
+            }
+
+            if (!ctx.Read(produced) || !ctx.Read(target) || !ctx.Read(activeType))
+                return false;
+
+            float oldSeconds = 0.0;
+            if (first < 0.0 && !ctx.Read(oldSeconds))
+                return false;
+
+            // A batch in progress becomes beer on the first tick; one that had
+            // spoiled stays sour water.
+            float needed = StillSettings.Get().FermentationMinutes * 60.0;
+            if (oldSeconds > 0.0 && oldSeconds < Math.Max(needed, 0.0) + STILL_OLD_SPOIL_SECONDS)
+            {
+                if (oldSeconds >= needed)
+                    m_LegacyBatch = STILL_LEGACY_READY;
+                else
+                    m_LegacyBatch = STILL_LEGACY_FERMENTING;
+            }
         }
 
         m_StillProgress = Math.Clamp(m_StillProgress, 0.0, STILL_BATCH_SECONDS);
-        if (!ctx.Read(m_AlcoholOutputProduced) || !ctx.Read(m_AlcoholOutputTarget) || !ctx.Read(m_ActiveFermentableType))
-            return false;
-
-        m_FermentSeconds = 0.0;
-        if (hasFermentation && !ctx.Read(m_FermentSeconds))
-            return false;
-
-        // Sanity limits only (a large item with a generous SpiritPerCargoSlot
-        // can need several litres).
-        m_AlcoholOutputProduced = Math.Clamp(m_AlcoholOutputProduced, 0.0, 100000.0);
-        m_AlcoholOutputTarget = Math.Clamp(m_AlcoholOutputTarget, 0.0, 100000.0);
+        m_FermentSeconds = Math.Max(m_FermentSeconds, 0.0);
         return true;
     }
 
+    // A still on a fireplace stays heated while the fire burns and while the
+    // fireplace is still hot after it goes out (its coals keep heating, as
+    // vanilla keeps cooking on a cooling fireplace). A gas stove heats only
+    // while it is on.
     bool HasHeatSource()
     {
         EntityAI parent = GetHierarchyParent();
@@ -239,7 +252,7 @@ class ImprovisedStill extends Pot
         {
             FireplaceBase fireplace = FireplaceBase.Cast(parent);
             if (fireplace)
-                return fireplace.IsBurning();
+                return fireplace.IsBurning() || fireplace.GetTemperature() >= StillSettings.Get().FireplaceResidualHeatTemperature;
 
             PortableGasStove stove = PortableGasStove.Cast(parent);
             if (stove)
@@ -302,7 +315,7 @@ class ImprovisedStill extends Pot
         {
             if (m_TickHeated)
                 next = STILL_TICK_FAST_MS;
-            else if (m_TickMash && m_FermentState != STILL_FERMENT_SPOILED)
+            else if (m_TickMash)
                 next = STILL_TICK_SLOW_MS;
         }
         SetStillTick(next);
@@ -315,7 +328,8 @@ class ImprovisedStill extends Pot
         if (GetQuantity() <= 0)
         {
             m_StillProgress = 0.0;
-            UpdateFermentation(false, null, dt);
+            m_LegacyBatch = STILL_LEGACY_NONE;
+            UpdateFermentation(false, dt);
             return;
         }
 
@@ -327,13 +341,18 @@ class ImprovisedStill extends Pot
             return;
         }
 
-        // Look these up once per tick; fermentation and distilling both need them.
-        bool heated = HasHeatSource();
-        ItemBase fermentable = FindFermentableInput();
-        m_TickHeated = heated;
-        m_TickMash = fermentable != null;
+        // A batch saved by an older version becomes beer now.
+        if (m_LegacyBatch != STILL_LEGACY_NONE)
+        {
+            if (HasMash())
+                ConvertToBeer(m_LegacyBatch == STILL_LEGACY_FERMENTING);
+            m_LegacyBatch = STILL_LEGACY_NONE;
+        }
 
-        UpdateFermentation(heated, fermentable, dt);
+        bool heated = HasHeatSource();
+        m_TickHeated = heated;
+
+        UpdateFermentation(heated, dt);
 
         // The thermometer's probe sits in the liquid, so it reads (and has)
         // the liquid's temperature, which cannot pass 100 °C.
@@ -360,24 +379,23 @@ class ImprovisedStill extends Pot
             return;
         }
 
+        StillSettings s = StillSettings.Get();
         int outputType = LIQUID_NONE;
+        float inputPerOutput = 1.0; // ml of the still's liquid used per ml distilled
         int inputLiquidType = GetLiquidType();
 
-        // Unfermented mash distills as plain water.
-        if (GetQuantity() > 0 && fermentable && (inputLiquidType & LIQUID_GROUP_WATER) && m_FermentState == STILL_FERMENT_READY)
+        // Beer distills to the spirit. Any water (salt, pond, river, snow,
+        // or a mash that has not fermented yet) distills to vanilla water with
+        // no disease, so it mixes with any other water like vanilla's does.
+        if (inputLiquidType == LIQUID_BEER)
         {
             outputType = LIQUID_VODKA;
-            if (m_ActiveFermentableType != fermentable.GetType() || m_AlcoholOutputTarget <= 0.0)
-            {
-                m_ActiveFermentableType = fermentable.GetType();
-                m_AlcoholOutputProduced = 0.0;
-                m_AlcoholOutputTarget = GetFermentableOutputTarget(fermentable);
-            }
+            inputPerOutput = Math.Max(s.BeerPerSpiritMl, 1.0);
         }
-        // Any water (salt, pond, river, snow...) distills to vanilla water with
-        // no disease, so it mixes with any other water like vanilla's does.
-        else if (GetQuantity() > 0 && (inputLiquidType & LIQUID_GROUP_WATER))
+        else if (inputLiquidType & LIQUID_GROUP_WATER)
+        {
             outputType = LIQUID_WATER;
+        }
 
         // Clean Water from older versions is water too.
         int bottleLiquid = bottle.GetLiquidType();
@@ -387,12 +405,6 @@ class ImprovisedStill extends Pot
         if (outputType == LIQUID_NONE || (bottle.GetQuantity() > 0 && bottleLiquid != outputType))
         {
             m_StillProgress = 0.0;
-            if (!fermentable && outputType != LIQUID_VODKA)
-            {
-                m_AlcoholOutputProduced = 0.0;
-                m_AlcoholOutputTarget = 0.0;
-                m_ActiveFermentableType = "";
-            }
             return;
         }
 
@@ -402,7 +414,7 @@ class ImprovisedStill extends Pot
         if (Liquid.m_LiquidInfosByType.Contains(inputLiquidType))
             startTemperature = Math.Min(Liquid.GetBoilThreshold(inputLiquidType), 100.0);
         if (outputType == LIQUID_VODKA)
-            startTemperature = Math.Min(startTemperature, StillSettings.Get().MashDistillTemperature);
+            startTemperature = Math.Min(startTemperature, s.MashDistillTemperature);
         if (GetTemperature() < startTemperature)
         {
             m_StillProgress = 0.0;
@@ -417,22 +429,15 @@ class ImprovisedStill extends Pot
         if (m_StillProgress < STILL_BATCH_SECONDS)
             return;
 
-        // Batch quantities are in base units (fermentable used up); the vodka
-        // poured into the bottle is scaled by the thermometer bonus, and the
-        // mash water used up by MashWaterPerSpiritMl.
+        // batchQuantity is the distillate before the thermometer bonus; the
+        // still's liquid used is batchQuantity * inputPerOutput.
         float yieldFactor = 1.0;
-        float waterPerMl = 1.0;
         if (outputType == LIQUID_VODKA)
-        {
             yieldFactor = GetVodkaYieldFactor();
-            waterPerMl = Math.Max(StillSettings.Get().MashWaterPerSpiritMl, 0.1);
-        }
 
         float availableOutput = bottle.GetQuantityMax() - bottle.GetQuantity();
         float batchQuantity = Math.Min(STILL_BATCH_QUANTITY, availableOutput / yieldFactor);
-        batchQuantity = Math.Min(batchQuantity, GetQuantity() / waterPerMl);
-        if (outputType == LIQUID_VODKA)
-            batchQuantity = Math.Min(batchQuantity, m_AlcoholOutputTarget - m_AlcoholOutputProduced);
+        batchQuantity = Math.Min(batchQuantity, GetQuantity() / inputPerOutput);
 
         if (batchQuantity <= 0)
         {
@@ -453,25 +458,7 @@ class ImprovisedStill extends Pot
             bottle.RemoveAllAgents();
         bottle.SetLiquidType(outputType);
         bottle.SetQuantity(before + added);
-        SetQuantity(GetQuantity() - batchQuantity * waterPerMl);
-
-        if (outputType == LIQUID_VODKA && fermentable)
-        {
-            m_AlcoholOutputProduced += batchQuantity;
-            if (m_AlcoholOutputProduced >= m_AlcoholOutputTarget)
-            {
-                fermentable.Delete();
-                m_AlcoholOutputProduced = 0.0;
-                m_AlcoholOutputTarget = 0.0;
-                m_ActiveFermentableType = "";
-            }
-        }
-        else
-        {
-            m_AlcoholOutputProduced = 0.0;
-            m_AlcoholOutputTarget = 0.0;
-            m_ActiveFermentableType = "";
-        }
+        SetQuantity(GetQuantity() - batchQuantity * inputPerOutput);
 
         if (bottle.IsKindOf("WaterBottle"))
         {
@@ -481,77 +468,52 @@ class ImprovisedStill extends Pot
         m_StillProgress = 0.0;
     }
 
-    // Fresh water with fruit or potatoes ferments while unheated; heat pauses
-    // it, and its speed follows the liquid temperature. Salt water never
-    // ferments (salt kills yeast). Ready mash left unheated too long spoils
-    // (cold slows that too): its fruit rots and it gives no vodka. Removing
-    // the fruit or the water resets it.
-    protected void UpdateFermentation(bool heated, ItemBase fermentable, float dt)
+    // Fresh water with enough fruit or potatoes ferments while unheated; heat
+    // pauses it, and its speed follows the liquid temperature. Salt water
+    // never ferments (salt kills yeast). When it finishes the water becomes
+    // beer. Removing the fruit or the water resets it.
+    protected void UpdateFermentation(bool heated, float dt)
     {
         StillSettings s = StillSettings.Get();
         float needed = s.FermentationMinutes * 60.0;
-        bool canSpoil = s.MashSpoilMinutes > 0.0;
-        float spoilAt = Math.Max(needed, 0.0) + s.MashSpoilMinutes * 60.0;
         int state = STILL_FERMENT_NONE;
         int pause = STILL_PAUSE_NONE;
-        int liquid = GetLiquidType();
-        bool freshWater = (liquid & LIQUID_GROUP_WATER) && liquid != LIQUID_SALTWATER;
+        bool fermenting = false;
 
-        int fermentableCount = CountFermentables();
-        bool addedFermentable = m_FermentableCount >= 0 && fermentableCount > m_FermentableCount;
-        m_FermentableCount = fermentableCount;
-
-        if (!fermentable || GetQuantity() <= 0 || !freshWater)
+        if (IsFreshWater())
         {
-            // A new batch starts clean.
-            if (m_FermentSeconds > 0.0)
-                RemoveAgent(eAgents.FOOD_POISON);
-            m_FermentSeconds = 0.0;
-        }
-        else
-        {
-            // Fresh fruit added to ready mash has to ferment too, faster than
-            // a new batch because the yeast is already working.
-            if (addedFermentable && needed > 0.0 && m_FermentSeconds >= needed && !(canSpoil && m_FermentSeconds >= spoilAt))
-                m_FermentSeconds = needed * (1.0 - Math.Clamp(s.TopUpFermentationFraction, 0.0, 1.0));
-
-            // m_FermentSeconds is saved, so crossing into "ready" and "spoiled"
-            // happens once per batch and the rolls are not repeated on reload.
-            // With instant fermentation the first tick of a batch counts.
-            bool becameReady = false;
-            bool becameSpoiled = false;
-            if (needed <= 0.0 && m_FermentSeconds <= 0.0)
+            float capacity = GetFermentCapacity();
+            if (capacity > 0.0)
             {
-                m_FermentSeconds = STILL_INSTANT_FERMENT_SECONDS;
-                becameReady = true;
-            }
-            else if (!heated && (m_FermentSeconds < needed || (canSpoil && m_FermentSeconds < spoilAt)))
-            {
-                float before = m_FermentSeconds;
-                m_FermentSeconds += dt * GetFermentRate(s, pause);
-                becameReady = before < needed && m_FermentSeconds >= needed;
-                becameSpoiled = canSpoil && m_FermentSeconds >= spoilAt;
-            }
-
-            if (becameReady)
-            {
-                float badChance = s.MashFoodPoisonChance;
-                if (HasRottenFermentable())
-                    badChance = s.RottenMashFoodPoisonChance;
-                if (Math.RandomFloat01() < badChance)
-                    InsertAgent(eAgents.FOOD_POISON, 1);
-            }
-
-            if (becameSpoiled)
-                SpoilMash();
-
-            if (canSpoil && m_FermentSeconds >= spoilAt)
-                state = STILL_FERMENT_SPOILED;
-            else if (m_FermentSeconds >= needed)
-                state = STILL_FERMENT_READY;
-            else
+                fermenting = true;
                 state = STILL_FERMENT_FERMENTING;
+
+                if (capacity + 0.5 < GetQuantity())
+                {
+                    pause = STILL_PAUSE_FRUIT; // keeps its progress until there is enough
+                }
+                else if (needed <= 0.0)
+                {
+                    m_FermentSeconds = needed;
+                }
+                else if (!heated)
+                {
+                    m_FermentSeconds += dt * GetFermentRate(s, pause);
+                }
+
+                if (pause != STILL_PAUSE_FRUIT && m_FermentSeconds >= needed)
+                {
+                    ConvertToBeer(true);
+                    fermenting = false;
+                    state = STILL_FERMENT_NONE;
+                    pause = STILL_PAUSE_NONE;
+                }
+            }
         }
+
+        if (!fermenting)
+            m_FermentSeconds = 0.0;
+        m_TickMash = fermenting;
 
         if (state != m_FermentState || pause != m_FermentPause)
         {
@@ -561,22 +523,72 @@ class ImprovisedStill extends Pot
         }
     }
 
-    // Spoiled mash sours: the fruit in it rots and drinking it can give food
-    // poisoning. Distilling it gives only clean water.
-    protected void SpoilMash()
+    // The fermented water becomes beer. Fruit is used in cargo order only as
+    // far as the water needs; a partly needed item is partly used. Fermenting
+    // gives each germ already in the water a chance to die, then rolls for a
+    // bad batch (food poisoning travels with the beer). A batch saved by an
+    // older version that had already been rolled skips both.
+    protected void ConvertToBeer(bool fresh)
     {
-        CargoBase cargo = GetInventory().GetCargo();
-        if (!cargo)
-            return;
+        StillSettings s = StillSettings.Get();
+        float volumeLeft = GetQuantity();
+        bool rotten = false;
 
-        for (int i = 0; i < cargo.GetItemCount(); i++)
+        array<Edible_Base> fruit = new array<Edible_Base>;
+        CargoBase cargo = GetInventory().GetCargo();
+        if (cargo)
         {
-            Edible_Base edible = Edible_Base.Cast(cargo.GetItem(i));
-            if (IsFermentable(edible) && !edible.IsFoodRotten())
-                edible.ChangeFoodStage(FoodStageType.ROTTEN);
+            for (int i = 0; i < cargo.GetItemCount(); i++)
+            {
+                Edible_Base edible = Edible_Base.Cast(cargo.GetItem(i));
+                if (IsFermentable(edible))
+                    fruit.Insert(edible);
+            }
         }
 
-        InsertAgent(eAgents.FOOD_POISON, 1);
+        foreach (Edible_Base item : fruit)
+        {
+            if (volumeLeft <= 0.0)
+                break;
+
+            float itemCapacity = GetFruitCapacity(item);
+            if (itemCapacity <= 0.0)
+                continue;
+
+            if (item.IsFoodRotten())
+                rotten = true;
+
+            if (itemCapacity <= volumeLeft + 0.01 || !item.HasQuantity())
+            {
+                volumeLeft -= itemCapacity;
+                item.Delete();
+            }
+            else
+            {
+                item.SetQuantity(item.GetQuantity() * (1.0 - volumeLeft / itemCapacity));
+                volumeLeft = 0.0;
+            }
+        }
+
+        if (fresh)
+        {
+            int agents = GetAgents();
+            for (int bit = 0; bit < 31; bit++)
+            {
+                int agent = 1 << bit;
+                if ((agents & agent) && Math.RandomFloat01() < s.FermentKillsGermsChance)
+                    RemoveAgent(agent);
+            }
+
+            float badChance = s.MashFoodPoisonChance;
+            if (rotten)
+                badChance = s.RottenMashFoodPoisonChance;
+            if (Math.RandomFloat01() < badChance)
+                InsertAgent(eAgents.FOOD_POISON, 1);
+        }
+
+        SetLiquidType(LIQUID_BEER);
+        m_FermentSeconds = 0.0;
     }
 
     // Fruit or potatoes, cooked, dried or rotten (vanilla's "fruit" includes
@@ -593,38 +605,50 @@ class ImprovisedStill extends Pot
         return item.IsKindOf("Tomato") || item.IsKindOf("GreenBellPepper") || item.IsKindOf("Zucchini");
     }
 
-    // Any rotten fruit or potato in the mash makes the whole batch more
-    // likely to go bad.
-    protected bool HasRottenFermentable()
+    // ml of water one fruit/potato can ferment: WaterPerFruitSlot per inventory
+    // slot it takes up, less for rotten or low-sugar ones and for what has
+    // been eaten.
+    protected float GetFruitCapacity(ItemBase item)
+    {
+        if (!item || !g_Game)
+            return 0.0;
+
+        StillSettings s = StillSettings.Get();
+        TIntArray itemSize = new TIntArray;
+        g_Game.ConfigGetIntArray("CfgVehicles " + item.GetType() + " itemSize", itemSize);
+        int cargoArea = 1;
+        if (itemSize.Count() >= 2)
+            cargoArea = Math.Max(itemSize[0] * itemSize[1], 1);
+
+        float capacity = cargoArea * Math.Max(s.WaterPerFruitSlot, 1.0);
+        Edible_Base edible = Edible_Base.Cast(item);
+        if (edible && edible.IsFoodRotten())
+            capacity *= s.RottenFruitVodkaYield;
+        if (IsLowSugar(item))
+            capacity *= s.LowSugarVegetableVodkaYield;
+
+        if (item.HasQuantity() && item.GetQuantityMax() > 0)
+            capacity *= Math.Clamp(item.GetQuantity() / item.GetQuantityMax(), 0.0, 1.0);
+
+        return Math.Max(capacity, 0.0);
+    }
+
+    // ml of water all the fruit/potatoes in the still can ferment.
+    protected float GetFermentCapacity()
     {
         CargoBase cargo = GetInventory().GetCargo();
         if (!cargo)
-            return false;
+            return 0.0;
 
+        float capacity = 0.0;
         for (int i = 0; i < cargo.GetItemCount(); i++)
         {
             Edible_Base edible = Edible_Base.Cast(cargo.GetItem(i));
-            if (IsFermentable(edible) && edible.IsFoodRotten())
-                return true;
+            if (IsFermentable(edible))
+                capacity += GetFruitCapacity(edible);
         }
 
-        return false;
-    }
-
-    protected int CountFermentables()
-    {
-        CargoBase cargo = GetInventory().GetCargo();
-        if (!cargo)
-            return 0;
-
-        int count = 0;
-        for (int i = 0; i < cargo.GetItemCount(); i++)
-        {
-            if (IsFermentable(Edible_Base.Cast(cargo.GetItem(i))))
-                count++;
-        }
-
-        return count;
+        return capacity;
     }
 
     protected ItemBase FindFermentableInput()
@@ -643,35 +667,8 @@ class ImprovisedStill extends Pot
         return null;
     }
 
-    protected float GetFermentableOutputTarget(ItemBase item)
-    {
-        float perSlot = Math.Max(StillSettings.Get().SpiritPerCargoSlot, 1.0);
-        if (!item || !g_Game)
-            return perSlot;
-
-        TIntArray itemSize = new TIntArray;
-        g_Game.ConfigGetIntArray("CfgVehicles " + item.GetType() + " itemSize", itemSize);
-        int cargoArea = 1;
-        if (itemSize.Count() >= 2)
-            cargoArea = Math.Max(itemSize[0] * itemSize[1], 1);
-
-        float target = cargoArea * perSlot;
-        Edible_Base edible = Edible_Base.Cast(item);
-        if (edible && edible.IsFoodRotten())
-            target *= StillSettings.Get().RottenFruitVodkaYield;
-        if (IsLowSugar(item))
-            target *= StillSettings.Get().LowSugarVegetableVodkaYield;
-
-        // A partly eaten item gives its share.
-        if (item.HasQuantity() && item.GetQuantityMax() > 0)
-            target *= Math.Clamp(item.GetQuantity() / item.GetQuantityMax(), 0.0, 1.0);
-
-        // Never zero, or the item would never be used up.
-        return Math.Max(target, 1.0);
-    }
-
     // Temperature control with a working thermometer improves the yield of
-    // each vodka batch made while it is attached.
+    // each spirit batch made while it is attached.
     protected float GetVodkaYieldFactor()
     {
         ItemBase thermometer = GetThermometer();

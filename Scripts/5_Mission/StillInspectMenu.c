@@ -19,19 +19,12 @@ modded class InspectMenuNew
                 fermenting = "MASH (TOO COLD)";
             else if (still.GetFermentPause() == ImprovisedStill.STILL_PAUSE_HOT)
                 fermenting = "MASH (TOO HOT)";
+            else if (still.GetFermentPause() == ImprovisedStill.STILL_PAUSE_FRUIT)
+                fermenting = "MASH (NEEDS MORE FRUIT)";
             WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", fermenting, Colors.COLOR_LIQUID);
             return;
         }
-        if (still && still.GetFermentState() == ImprovisedStill.STILL_FERMENT_READY)
-        {
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "MASH (READY)", Colors.COLOR_LIQUID);
-            return;
-        }
-        if (still && still.GetFermentState() == ImprovisedStill.STILL_FERMENT_SPOILED)
-        {
-            WidgetTrySetText(root_widget, "ItemLiquidTypeWidget", "MASH (SPOILED)", Colors.COLOR_LIQUID);
-            return;
-        }
+        // Once fermented it is vanilla beer, named by vanilla.
 
         int liquidType = itemBase.GetLiquidType();
         if (liquidType == LIQUID_SALTWATER)

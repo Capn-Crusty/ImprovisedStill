@@ -18,26 +18,28 @@ class StillSettings
     float SalineResistanceSeconds = 0;          // after a completed saline IV, immunity to saltwater sickness; 0 disables
 
     // Fermentation
-    float FermentationMinutes = 15;             // unheated time water + fruit/potatoes must sit before they distill to vodka; 0 = instant
-    float MashFoodPoisonChance = 0.2;           // chance (0-1) a batch goes bad when it becomes ready; drinking a bad batch can cause food poisoning
-    float SpiritPerCargoSlot = 100;             // ml of spirit per inventory slot the fruit/potato takes up
-    float MashWaterPerSpiritMl = 1;             // ml of mash water used up per ml of spirit (realistically 5-10)
-    float RottenMashFoodPoisonChance = 0.6;     // the same chance when the fruit/potatoes are rotten (burnt ones do not ferment at all)
-    float RottenFruitVodkaYield = 0.5;          // vodka from rotten fruit/potatoes compared with fresh, dried or cooked (0.5 = half)
-    float LowSugarVegetableVodkaYield = 0.25;   // vodka from tomatoes, peppers and zucchini compared with fruit (cannabis does not ferment)
-    float TopUpFermentationFraction = 0.5;      // fresh fruit/potatoes added to ready mash send it back to fermenting for this share of FermentationMinutes; 0 = stays ready
-    float FermentMinTemperature = 5;            // liquid temperature (°C) at or below which fermentation (and spoiling) stops
+    float FermentationMinutes = 15;             // unheated time water + fruit/potatoes must sit before the water becomes beer; 0 = instant
+    float WaterPerFruitSlot = 250;              // ml of water each inventory slot of fruit/potato can ferment; not enough fruit = no fermenting
+    float RottenFruitVodkaYield = 0.5;          // how much a rotten fruit/potato counts toward WaterPerFruitSlot (0.5 = half)
+    float LowSugarVegetableVodkaYield = 0.25;   // how much tomatoes, peppers and zucchini count toward WaterPerFruitSlot (cannabis does not ferment)
+    float FermentKillsGermsChance = 0.75;       // chance (0-1) that fermenting kills each germ already in the water
+    float MashFoodPoisonChance = 0.2;           // chance (0-1) a batch goes bad as it becomes beer; drinking it can cause food poisoning
+    float RottenMashFoodPoisonChance = 0.6;     // the same chance when any of the fruit/potatoes are rotten (burnt ones do not ferment at all)
+    float FermentMinTemperature = 5;            // liquid temperature (°C) at or below which fermentation stops
     float FermentFullSpeedTemperature = 20;     // full speed from here; slower between the minimum and this
     float FermentMaxTemperature = 40;           // above this (hot mash after heating) fermentation stops until it cools
-    float MashSpoilMinutes = 120;               // unheated time ready mash keeps before it spoils (fruit rots, no vodka, can give food poisoning); 0 = never
-    float MashDistillTemperature = 78;          // liquid temperature (°C) at which ready mash starts giving vodka; water distills at its boiling point
+
+    // Distilling
+    float BeerPerSpiritMl = 3;                  // ml of beer used up per ml of spirit distilled (a full still nearly fills a 750 ml glass bottle; with a thermometer it fills one)
+    float MashDistillTemperature = 78;          // liquid temperature (°C) at which beer starts giving spirit; water distills at its boiling point
+    float FireplaceResidualHeatTemperature = 100; // a fireplace that has gone out keeps heating the still while it is at least this hot (°C)
 
     // Thermometer attachment
-    float ThermometerVodkaBonus = 0.25;         // extra vodka per fruit/potato with a thermometer attached (0.25 = +25%)
+    float ThermometerVodkaBonus = 0.25;         // extra spirit while a thermometer is attached (0.25 = +25%)
 
     // Drinking alcohol (intoxication, in "units": 1 ml of vodka = 1 unit)
     float VodkaAlcoholPerMl = 1.0;              // units per ml of vodka digested
-    float BeerAlcoholPerMl = 0.1;               // units per ml of beer (and ready mash) digested
+    float BeerAlcoholPerMl = 0.1;               // units per ml of beer digested (including beer from the still)
     float TipsyUnits = 50;
     float DrunkUnits = 150;
     float VeryDrunkUnits = 300;
