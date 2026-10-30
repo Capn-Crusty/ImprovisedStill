@@ -2,6 +2,7 @@ class CraftImprovisedStill : RecipeBase
 {
     protected int m_PotIngredientIndex;
     protected int m_PipeIngredientIndex;
+    protected const float STILL_POT_EMPTY_FRACTION = 0.01; // up to 1% of capacity counts as empty
 
     override void Init()
     {
@@ -15,11 +16,12 @@ class CraftImprovisedStill : RecipeBase
 
         // RecipeBase leaves these at 0, which means "pristine only" (damage)
         // and "empty only" (quantity). Allow any condition short of ruined,
-        // like vanilla recipes; the pot must still be empty.
+        // like vanilla recipes. The pot must be empty, checked in CanDo with a
+        // tolerance (see STILL_POT_EMPTY_FRACTION).
         m_MinDamageIngredient[0] = -1;
         m_MaxDamageIngredient[0] = 3;
         m_MinQuantityIngredient[0] = -1;
-        m_MaxQuantityIngredient[0] = 0;
+        m_MaxQuantityIngredient[0] = -1;
         m_MinDamageIngredient[1] = -1;
         m_MaxDamageIngredient[1] = 3;
         m_MinQuantityIngredient[1] = -1;
@@ -60,6 +62,12 @@ class CraftImprovisedStill : RecipeBase
         if (m_PotIngredientIndex < 0 || m_PipeIngredientIndex < 0)
             return false;
 
+        // An emptied pot can keep a trace of liquid the client shows as 0%;
+        // requiring exactly 0 let the craft start and the server cancel it.
+        ItemBase pot = ingredients[m_PotIngredientIndex];
+        if (pot.GetQuantity() > pot.GetQuantityMax() * STILL_POT_EMPTY_FRACTION)
+            return false;
+
         // Replace the actual pot regardless of whether it was held or targeted.
         m_ResultReplacesIngredient[0] = m_PotIngredientIndex;
         m_ResultInheritsHealth[0] = m_PotIngredientIndex;
@@ -80,6 +88,10 @@ class CraftImprovisedStill : RecipeBase
 
         ItemBase still = results[0];
         ItemBase pipe = ingredients[m_PipeIngredientIndex];
+
+        // Any trace of liquid left in the pot does not carry into the still.
+        if (still.GetQuantity() > 0)
+            still.SetQuantity(0);
 
         // Inventory moves fail while the craft action still holds the
         // ingredients, so finish assembly just after the recipe completes.
@@ -115,7 +127,7 @@ class CraftImprovisedStill : RecipeBase
         if (player && pipeLoc.GetType() == InventoryLocationType.HANDS)
             attached = player.ServerTakeEntityToTargetAttachment(still, pipe);
         else
-            attached = still.ServerTakeEntityAsAttachment(pipe);
+            attached = still.ServerTakeEntityToTargetAttachment(still, pipe); // 1.30 replacement for ServerTakeEntityAsAttachment
 
         if (attached)
             return;

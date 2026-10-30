@@ -1,0 +1,5 @@
+[h2]Improvised Still 1.1.1[/h2]
+[list]
+[*]Fixed: a cooking pot that had held water could start crafting into a still and then stop partway. An emptied pot now crafts normally, and the new still starts empty.
+[*]Updated for DayZ 1.30.
+[/list]
