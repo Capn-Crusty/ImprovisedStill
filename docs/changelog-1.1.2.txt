@@ -1,0 +1,6 @@
+[h2]Improvised Still 1.1.2[/h2]
+[list]
+[*]Fixed: after pouring a still out (for example into a barrel), it could show 0% but refuse a different liquid, such as water from a well. An emptied still now takes any liquid, and stills already stuck this way are fixed on the next server restart.
+[*]Fixed: a collection bottle holding a trace of a different liquid could stop the still from distilling into it.
+[*]Beer goes bad much less often: 1% with good ingredients (was 20%) and 10% with rotten fruit (was 60%). Existing servers keep their current values in profiles/ImprovisedStill/config.json; set MashFoodPoisonChance to 0.01 and RottenMashFoodPoisonChance to 0.1 there to use the new ones.
+[/list]

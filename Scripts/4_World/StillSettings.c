@@ -23,8 +23,8 @@ class StillSettings
     float RottenFruitVodkaYield = 0.5;          // how much a rotten fruit/potato counts toward WaterPerFruitSlot (0.5 = half)
     float LowSugarVegetableVodkaYield = 0.25;   // how much tomatoes, peppers and zucchini count toward WaterPerFruitSlot (cannabis does not ferment)
     float FermentKillsGermsChance = 0.75;       // chance (0-1) that fermenting kills each germ already in the water
-    float MashFoodPoisonChance = 0.2;           // chance (0-1) a batch goes bad as it becomes beer; drinking it can cause food poisoning
-    float RottenMashFoodPoisonChance = 0.6;     // the same chance when any of the fruit/potatoes are rotten (burnt ones do not ferment at all)
+    float MashFoodPoisonChance = 0.01;          // chance (0-1) a batch goes bad as it becomes beer; drinking it can cause food poisoning
+    float RottenMashFoodPoisonChance = 0.1;     // the same chance when any of the fruit/potatoes are rotten (burnt ones do not ferment at all)
     float FermentMinTemperature = 5;            // liquid temperature (°C) at or below which fermentation stops
     float FermentFullSpeedTemperature = 20;     // full speed from here; slower between the minimum and this
     float FermentMaxTemperature = 40;           // above this (hot mash after heating) fermentation stops until it cools

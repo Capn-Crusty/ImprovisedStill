@@ -24,6 +24,7 @@ class ImprovisedStill extends Pot
     protected const float STILL_PIPE_CONDUCTION_TEMPERATURE = 40.0; // from the hot pot alone
     protected const int STILL_TICK_FAST_MS = 5000;  // heated: distilling needs it
     protected const int STILL_TICK_SLOW_MS = 30000; // fermenting (a minutes-long timer)
+    protected const float STILL_TRACE_FRACTION = 0.01; // up to 1% of capacity left after pouring out counts as empty
 
     void ImprovisedStill()
     {
@@ -141,8 +142,26 @@ class ImprovisedStill extends Pot
     override void OnQuantityChanged(float delta)
     {
         super.OnQuantityChanged(delta);
+        // Pouring out can leave a trace the inventory shows as 0%, which
+        // still blocks filling with a different liquid.
+        if (delta < 0 && ClearTraceLiquid())
+            return;
         if (GetQuantity() > 0)
             WakeStill();
+    }
+
+    override void AfterStoreLoad()
+    {
+        super.AfterStoreLoad();
+        ClearTraceLiquid(); // stills saved with a trace before 1.1.2
+    }
+
+    protected bool ClearTraceLiquid()
+    {
+        if (!g_Game.IsServer() || GetQuantity() <= 0 || GetQuantity() > GetQuantityMax() * STILL_TRACE_FRACTION)
+            return false;
+        SetQuantity(0);
+        return true;
     }
 
     override void EECargoIn(EntityAI item)
@@ -401,6 +420,11 @@ class ImprovisedStill extends Pot
         int bottleLiquid = bottle.GetLiquidType();
         if (bottleLiquid == LIQUID_CLEANWATER)
             bottleLiquid = LIQUID_WATER;
+
+        // A bottle poured out can keep a trace of another liquid while
+        // showing 0%; it would block the distillate for good.
+        if (outputType != LIQUID_NONE && bottleLiquid != outputType && bottle.GetQuantity() > 0 && bottle.GetQuantity() <= bottle.GetQuantityMax() * STILL_TRACE_FRACTION)
+            bottle.SetQuantity(0);
 
         if (outputType == LIQUID_NONE || (bottle.GetQuantity() > 0 && bottleLiquid != outputType))
         {

@@ -69,8 +69,8 @@ On first start the server creates `<server profile>/ImprovisedStill/config.json`
 | `RottenFruitVodkaYield` | 0.5 | How much a rotten fruit or potato counts toward `WaterPerFruitSlot` |
 | `LowSugarVegetableVodkaYield` | 0.25 | How much tomatoes, peppers and zucchini count toward `WaterPerFruitSlot` |
 | `FermentKillsGermsChance` | 0.75 | Chance (0-1) that fermenting kills each germ already in the water |
-| `MashFoodPoisonChance` | 0.2 | Chance (0-1) a batch goes bad as it becomes beer |
-| `RottenMashFoodPoisonChance` | 0.6 | The same chance when any of the fruit or potatoes are rotten (burnt ones do not ferment) |
+| `MashFoodPoisonChance` | 0.01 | Chance (0-1) a batch goes bad as it becomes beer |
+| `RottenMashFoodPoisonChance` | 0.1 | The same chance when any of the fruit or potatoes are rotten (burnt ones do not ferment) |
 | `FermentMinTemperature` | 5 | Liquid temperature (°C) at or below which fermentation stops |
 | `FermentFullSpeedTemperature` | 20 | Full fermentation speed from this temperature; slower below it |
 | `FermentMaxTemperature` | 40 | Above this (hot mash after heating) fermentation stops until it cools |
